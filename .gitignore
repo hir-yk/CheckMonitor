@@ -1,0 +1,27 @@
+# Python cache and build files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+build/
+dist/
+*.egg-info
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Virtual environment
+venv/
+.venv/
+env/
+
+# Program generated directories (Screenshots)
+# タイムスタンプ形式のディレクトリ名 (例: 20231027_153020/) を無視
+[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]_[0-9][0-9][0-9][0-9][0-9][0-9]/
+
+# IDE/Editor files
+.vscode/
+.idea/
+

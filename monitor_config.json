@@ -1,0 +1,12 @@
+{
+    "monitor_area": [
+        988,
+        497,
+        2176,
+        1451
+    ],
+    "change_threshold": 0.05,
+    "prefix": "screenshot",
+    "interval": 1.0,
+    "last_directory": "test2"
+}
