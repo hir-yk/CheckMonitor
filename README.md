@@ -1,55 +1,55 @@
-# Screen Change Monitor (画面変化監視ツール)
+# Screen Change Monitor (Screen Change Monitoring Tool)
 
-画面の指定したエリアを定期的に監視し、画面に変化（ピクセルの差分）があった場合に自動でスナップショットを保存するPythonツールです。
+A Python tool that periodically monitors a specified area of the screen and automatically saves a snapshot when a change (pixel difference) is detected.
 
-## 必要なライブラリ
+## Required libraries
 
-このプログラムを実行するには、以下のライブラリが必要です。
+The following libraries are required to run this program:
 
 ```bash
 pip install opencv-python numpy Pillow pynput pyautogui
-````
+```
 
-## 実行方法
+## Usage
 
-### 1\. 初回実行（監視エリアの指定）
+### 1. First run (select monitoring area)
 
-引数を指定せず実行すると、マウスで監視エリアを選択するモードになります。
+Run without any arguments to enter mouse selection mode to choose the monitoring area.
 
 ```bash
 python this_script_name.py
-# 実行後、コンソールで指示される通りにマウスでエリアの左上と右下をクリックしてください。
+# After running, follow the console instructions and click the top-left and bottom-right corners of the area with the mouse.
 ```
 
-### 2\. 連続実行（前回設定の使用）
+### 2. Continuous run (use previous settings)
 
-前回設定した監視エリアとパラメータを使用して、すぐに監視を開始します。
+Start monitoring immediately using the previously saved monitoring area and parameters.
 
 ```bash
 python your_script_name.py -c
 ```
 
-## オプション
+## Options
 
-| 短縮 | フルネーム | デフォルト値 | 説明 |
-| :---: | :---: | :---: | :--- |
-| `-c` | `--continuous` | (なし) | **連続モード**。前回保存されたエリア設定とパラメータを使用して実行します。 |
-| `-d` | `--directory` | タイムスタンプ | 画像ファイルを保存するディレクトリを指定します。 |
-| `-t` | `--change-threshold` | `0.05` (5%) | 変化を検出するピクセルの割合の閾値 (0.0から1.0)。 |
-| `-p` | `--prefix` | `screenshot` | 保存するファイル名のPrefixを指定します。 |
-| `-i` | `--interval` | `1.0` (秒) | 監視間隔を秒単位で指定します。 |
-| `-ca` | `--confirm-area` | (なし) | 連続モード (`-c`) 実行時に、監視エリアの緑枠表示を確認します。デフォルトは非表示です。 |
+| Short | Full name | Default | Description |
+| :---: | :--- | :---: | :--- |
+| `-c` | `--continuous` | (none) | Continuous mode. Use the area settings and parameters saved from the previous run. |
+| `-d` | `--directory` | timestamp | Specify the directory to save image files. |
+| `-t` | `--change-threshold` | `0.05` (5%) | Threshold of the proportion of pixels that changed to detect a change (0.0 to 1.0). |
+| `-p` | `--prefix` | `screenshot` | Specify the filename prefix for saved images. |
+| `-i` | `--interval` | `1.0` (seconds) | Specify the monitoring interval in seconds. |
+| `-ca` | `--confirm-area` | (none) | When running in continuous mode (`-c`), show a green rectangle indicating the monitoring area for confirmation. Default is off. |
 
-### 例
+### Example
 
-  - 変化の閾値を厳しく（1%）し、間隔を短く（0.5秒）して監視を開始する例:
-    ```bash
-    python this_script_name.py -c -t 0.01 -i 0.5
-    ```
+- Start monitoring with a stricter change threshold (1%) and a shorter interval (0.5 seconds):
 
-## 監視の終了方法
+```bash
+python this_script_name.py -c -t 0.01 -i 0.5
+```
 
-監視が開始された後、コンソール（ターミナル）で以下のキーを押してください。
+## How to stop monitoring
 
-  - **`Ctrl + C`**：監視を停止し、プログラムを終了します。
+After monitoring has started, press the following key in the console (terminal):
 
+- Ctrl + C: Stop monitoring and exit the program.
