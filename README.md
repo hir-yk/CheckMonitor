@@ -17,7 +17,7 @@ pip install opencv-python numpy Pillow pynput pyautogui
 引数を指定せず実行すると、マウスで監視エリアを選択するモードになります。
 
 ```bash
-python your_script_name.py
+python this_script_name.py
 # 実行後、コンソールで指示される通りにマウスでエリアの左上と右下をクリックしてください。
 ```
 
@@ -44,7 +44,7 @@ python your_script_name.py -c
 
   - 変化の閾値を厳しく（1%）し、間隔を短く（0.5秒）して監視を開始する例:
     ```bash
-    python your_script_name.py -c -t 0.01 -i 0.5
+    python this_script_name.py -c -t 0.01 -i 0.5
     ```
 
 ## 監視の終了方法
