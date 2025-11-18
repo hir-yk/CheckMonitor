@@ -1,22 +1,143 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Monitoring Interface</title>
-    <script>
-        // JavaScript to simulate monitoring
-        function fetchData() {
-            // Simulate fetching data
-            console.log('Fetching data...');
-        }
-        setInterval(fetchData, 5000);
-    </script>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>CheckMonitor — Web UI</title>
+  <style>
+    body { font-family: "Segoe UI", system-ui, -apple-system, Arial; padding: 1rem; background:#f4f7fb; color:#111;}
+    .app { max-width: 1000px; margin:0 auto; background:#fff; padding:1rem 1.2rem; border-radius:8px; box-shadow:0 8px 30px rgba(20,28,45,0.06);} 
+    header{display:flex;align-items:center;justify-content:space-between}
+    .controls {margin-top:0.8rem; display:flex; gap:0.6rem; align-items:center;}
+    button{padding:0.45rem 0.8rem;border-radius:6px;border:1px solid #2b7cff;background:#2b7cff;color:#fff;cursor:pointer}
+    input, select {padding:0.4rem;border-radius:6px;border:1px solid #ccc;}
+    pre {background:#f3f6fb;padding:0.8rem;border-radius:6px;max-height:180px;overflow:auto}
+    .snap-list { display:flex; flex-wrap:wrap; gap:0.6rem; margin-top:0.6rem; }
+    .snap-list img { width:200px; height:auto; border-radius:6px; border:1px solid #ddd; }
+  </style>
 </head>
 <body>
-    <h1>Monitoring Interface</h1>
-    <div id="data">
-        <p>Data will be displayed here...</p>
-    </div>
+  <div class="app">
+    <header>
+      <div>
+        <h1>CheckMonitor — Web UI</h1>
+        <p style="margin:0">Python 実行プロセス（CheckMonitor.py）をブラウザから操作します。</p>
+      </div>
+      <div id="statusBox">状態: <strong id="state">unknown</strong></div>
+    </header>
+
+    <section class="controls">
+      <label>監視間隔: <input id="interval" value="1.0" size="6"></label>
+      <label>閾値: <input id="threshold" value="0.05" size="6"></label>
+      <label>Prefix: <input id="prefix" value="screenshot" size="12"></label>
+      <label>ディレクトリ: <input id="directory" value="" placeholder="空なら config の last_directory を使用" size="20"></label>
+      <button id="startBtn">Start</button>
+      <button id="stopBtn" disabled>Stop</button>
+      <button id="refreshBtn">Refresh status</button>
+    </section>
+
+    <section style="margin-top:1rem;">
+      <h3>ログ</h3>
+      <pre id="logs">(ログがここに表示されます)</pre>
+    </section>
+
+    <section style="margin-top:1rem;">
+      <h3>スナップショット</h3>
+      <div>
+        <button id="listSnaps">一覧取得</button>
+        <input id="snapDir" placeholder="一覧取得時に使うディレクトリ（任意）" size="30">
+      </div>
+      <div class="snap-list" id="snapList"></div>
+    </section>
+  </div>
+
+  <script>
+    const startBtn = document.getElementById('startBtn');
+    const stopBtn = document.getElementById('stopBtn');
+    const refreshBtn = document.getElementById('refreshBtn');
+    const logsEl = document.getElementById('logs');
+    const stateEl = document.getElementById('state');
+    const listSnapsBtn = document.getElementById('listSnaps');
+    const snapList = document.getElementById('snapList');
+
+    async function api(path, opts){
+      const res = await fetch(path, Object.assign({headers:{'Content-Type':'application/json'}}, opts));
+      return res.json();
+    }
+
+    async function refreshStatus(){
+      try{
+        const r = await api('/api/status', {method:'GET'});
+        stateEl.textContent = r.running ? `running (pid ${r.pid})` : 'stopped';
+        stopBtn.disabled = !r.running;
+        startBtn.disabled = r.running;
+        logsEl.textContent = (r.logs || []).map(l => {
+          if (typeof l === 'string') return l;
+          const t = new Date(l.t).toLocaleTimeString();
+          return `[${t}] ${l.src}: ${l.text}`;
+        }).join('\n');
+      }catch(e){
+        stateEl.textContent = 'error';
+        logsEl.textContent = String(e);
+      }
+    }
+
+    startBtn.addEventListener('click', async () => {
+      const body = {
+        interval: parseFloat(document.getElementById('interval').value || '1'),
+        change_threshold: parseFloat(document.getElementById('threshold').value || '0.05'),
+        prefix: document.getElementById('prefix').value || 'screenshot',
+        directory: document.getElementById('directory').value || undefined
+      };
+      try {
+        const r = await api('/api/start', { method: 'POST', body: JSON.stringify(body) });
+        if (r.ok) {
+          await refreshStatus();
+        } else {
+          alert('Start failed: ' + (r.error || JSON.stringify(r)));
+        }
+      } catch (e) {
+        alert('Start exception: ' + e);
+      }
+    });
+
+    stopBtn.addEventListener('click', async () => {
+      const r = await api('/api/stop', { method: 'POST', body: '{}' });
+      if (r.ok) {
+        await refreshStatus();
+      } else {
+        alert('Stop failed: ' + (r.error || JSON.stringify(r)));
+      }
+    });
+
+    refreshBtn.addEventListener('click', refreshStatus);
+
+    listSnapsBtn.addEventListener('click', async () => {
+      const dir = document.getElementById('snapDir').value || undefined;
+      const url = dir ? `/api/snapshots?dir=${encodeURIComponent(dir)}` : '/api/snapshots';
+      try {
+        const r = await fetch(url);
+        const json = await r.json();
+        snapList.innerHTML = '';
+        (json.files || []).forEach(f => {
+          const a = document.createElement('a');
+          a.href = f.url;
+          a.target = '_blank';
+          const img = document.createElement('img');
+          img.src = f.url;
+          a.appendChild(img);
+          snapList.appendChild(a);
+        });
+        if ((json.files || []).length === 0) snapList.textContent = '(スナップショットが見つかりません)';
+      } catch (e) {
+        snapList.textContent = '一覧取得エラー: ' + e;
+      }
+    });
+
+    // 初期ステータス読み込み
+    refreshStatus();
+    // 5秒ごとに自動更新（任意）
+    setInterval(refreshStatus, 5000);
+  </script>
 </body>
 </html>
